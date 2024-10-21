@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 
 DATA = {
@@ -28,3 +29,27 @@ DATA = {
 #     'ингредиент2': количество2,
 #   }
 # }
+
+def book_cook(request, dish_name):
+    recipe = DATA.get(dish_name)
+
+    if recipe is None:
+        return HttpResponse("Рецепт не найден.", status=404)
+
+    servings = request.GET.get('servings', 1)
+
+    try:
+        servings = int(servings)
+        if servings <= 0:
+            raise ValueError
+    except ValueError:
+        return HttpResponse("Количество порций должно быть положительным целым числом.", status=400)
+
+    # Умножаем количество ингредиентов на количество порций
+    adjusted_recipe = {ingredient: amount * servings for ingredient, amount in recipe.items()}
+
+    context = {
+        'recipe': adjusted_recipe,
+    }
+
+    return render(request, 'calculator/index.html', context)
